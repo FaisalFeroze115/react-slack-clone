@@ -1,0 +1,131 @@
+import React, { useEffect, useState } from 'react'
+import styled from 'styled-components'
+import InfoIcon from '@material-ui/icons/Info'
+import ChatInput from './ChatInput'
+import ChatMessage from './ChatMessage'
+import db from '../firebase'
+import { useParams } from "react-router-dom"
+
+
+function Chat() {
+
+    let {channelId} = useParams();
+    const [ channel, setChannel ] = useState();
+    const [ messages, setMessage ] = useState([]);
+
+    const getMessages = () =>{
+        db.collection('rooms')
+        .doc(channelId)
+        .collection('messages')
+        .orderBy('timestamp' , 'asc')
+        .onSnapshot((snapshot)=>{
+            let messages = snapshot.docs.map((doc)=>doc.data());
+            //console.log(messages);
+            setMessage(messages);
+        })
+    }
+
+    const getChannel = () =>{
+        db.collection('rooms')
+        .doc(channelId)
+        .onSnapshot((snapshot)=>{
+            setChannel(snapshot.data()); 
+        })
+    }
+    
+
+    useEffect(()=>{
+        getChannel();
+        getMessages();
+    },[channelId])
+
+    return (
+        <Container>
+            <Header>
+                <Channel>
+                    <ChannelName>
+                        # { channel && channel.name}
+                        
+                    </ChannelName>
+
+                    <ChannelInfo>
+                        THIS CHANNEL IS MINE
+                    </ChannelInfo>
+
+                </Channel>
+
+                <ChannelDetail>
+                    <div>
+                        Details
+                    </div>
+                    <Info/>
+
+                </ChannelDetail>
+
+            </Header>
+
+            <MessageContainer>
+                {
+                    messages.length > 0 &&
+                    messages.map((data, index)=>{
+                        <ChatMessage/>
+                    })
+                }
+                
+            </MessageContainer>
+
+            <ChatInput/>
+
+     
+
+        </Container>
+
+        
+
+    )
+}
+
+export default Chat
+
+const Container = styled.div`
+    display: grid;
+    grid-template-rows: 64px auto min-content;
+`
+
+const Header = styled.div`
+    padding-left: 20px;
+    padding-right: 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(83, 39, 83, .13);
+    justify-content: space-between;
+`
+
+const MessageContainer = styled.div`
+`
+
+const Info = styled(InfoIcon)`
+    margin-left: 10px;
+`
+
+
+
+const Channel = styled.div`
+`
+
+const ChannelName = styled.div`
+    font-weigh: 700;
+`
+
+const ChannelInfo = styled.div`
+    font-weigh: 400;
+    color: #606060;
+    font-size: 13px;
+    margin-top: 8px;
+`
+
+const ChannelDetail = styled.div`
+    display: flex;
+    align-items: center;
+    color: #606060;
+`
